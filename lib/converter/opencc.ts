@@ -1,17 +1,14 @@
-import { env } from "@/lib/env";
-
-let converter: any = null;
+let converter: ((text: string) => string) | null = null;
 let initialized = false;
 
 export async function initializeConverter(): Promise<void> {
   if (initialized) return;
 
   try {
-    // Use native OpenCC
-    // Note: WASM fallback (opencc-js) can be added later if needed
-    const opencc = await import("opencc");
-    converter = new opencc.OpenCC("s2tw.json");
-    console.log("Using native OpenCC");
+    // Use opencc-js (WASM version - works with Turbopack)
+    const { Converter } = await import("opencc-js");
+    converter = Converter({ from: "cn", to: "tw" });
+    console.log("Using OpenCC WASM (opencc-js)");
     initialized = true;
   } catch (error) {
     console.error("Failed to initialize OpenCC:", error);
@@ -31,7 +28,7 @@ export function convertContent(text: string): string {
     if (line === "\n" || line === "\r\n" || line === "\r") {
       return line;
     }
-    return converter.convertSync ? converter.convertSync(line) : converter(line);
+    return converter!(line);
   });
 
   return converted.join("");
@@ -42,5 +39,5 @@ export function convertFilename(filename: string): string {
     throw new Error("OpenCC converter not initialized");
   }
 
-  return converter.convertSync ? converter.convertSync(filename) : converter(filename);
+  return converter(filename);
 }
