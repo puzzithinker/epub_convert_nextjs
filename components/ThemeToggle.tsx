@@ -12,23 +12,26 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return null;
+    return (
+      <div className="w-10 h-10 rounded-full" style={{ backgroundColor: 'var(--surface)' }} />
+    );
   }
 
   return (
-    <div className="fixed top-0 right-0 z-30 p-2">
-      <label className="inline-flex items-center cursor-pointer">
-        <input
-          type="checkbox"
-          checked={theme === "light"}
-          onChange={toggleTheme}
-          className="sr-only peer"
-        />
-        <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-400"></div>
-        <span className="ml-2 text-2xl">
-          {theme === "light" ? "☀️" : "🌙"}
-        </span>
-      </label>
-    </div>
+    <button
+      onClick={toggleTheme}
+      className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      style={{
+        backgroundColor: 'var(--surface)',
+        boxShadow: 'var(--shadow-md)',
+        color: 'var(--text)',
+      }}
+      aria-label={theme === "light" ? "切換至深色模式" : "切換至淺色模式"}
+      title={theme === "light" ? "切換至深色模式" : "切換至淺色模式"}
+    >
+      <span className="text-xl" role="img" aria-hidden="true">
+        {theme === "light" ? "🌙" : "☀️"}
+      </span>
+    </button>
   );
 }

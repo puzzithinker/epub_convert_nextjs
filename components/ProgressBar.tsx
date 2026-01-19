@@ -8,16 +8,53 @@ interface ProgressBarProps {
 
 export function ProgressBar({ progress, isProcessing, hasError }: ProgressBarProps) {
   return (
-    <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative">
-      {isProcessing && (
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 animate-pulse"></div>
-      )}
+    <div className="w-full space-y-2">
+      {/* Progress bar container */}
       <div
-        className={`h-full transition-all duration-100 ${
-          hasError ? "bg-red-500" : "bg-blue-500"
-        } ${isProcessing ? "opacity-0" : "opacity-100"}`}
-        style={{ width: `${progress}%` }}
-      ></div>
+        className="w-full h-3 rounded-full overflow-hidden relative"
+        style={{
+          backgroundColor: 'var(--border)',
+        }}
+      >
+        {/* Animated shimmer effect during processing */}
+        {isProcessing && (
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              background: 'linear-gradient(90deg, transparent, var(--primary), transparent)',
+              animation: 'shimmer 1.5s infinite',
+            }}
+          />
+        )}
+
+        {/* Actual progress bar */}
+        <div
+          className="h-full transition-all duration-300 relative"
+          style={{
+            width: `${progress}%`,
+            backgroundColor: hasError ? 'var(--error)' : 'var(--primary)',
+          }}
+        />
+      </div>
+
+      {/* Percentage display */}
+      <div
+        className="text-sm text-center font-medium"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        {progress}%
+      </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   );
 }

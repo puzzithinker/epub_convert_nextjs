@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
-import { UploadState, ToastMessage } from "@/types";
+import { UploadState, ToastMessage, ToastType } from "@/types";
 import { ProgressBar } from "./ProgressBar";
 import { Toast } from "./Toast";
 import { humanFileSize, getFilenameFromContentDisposition } from "@/lib/utils";
@@ -22,25 +22,26 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
   });
 
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [dragCounter, setDragCounter] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const dragCounterRef = useRef(0);
 
-  const showToast = (content: string) => {
-    setToast({ content, id: Date.now() });
+  const showToast = (content: string, type: ToastType = "info") => {
+    setToast({ content, id: Date.now(), type });
   };
 
   const validateFile = (file: File): boolean => {
     // Check extension
     const extension = file.name.split(".").pop()?.toLowerCase();
     if (extension !== "epub") {
-      showToast("只接受 EPUB 格式的檔案!");
+      showToast("只接受 EPUB 格式的檔案!", "error");
       return false;
     }
 
     // Check size
     if (file.size >= maxUploadBytes) {
-      showToast("檔案過大!");
+      showToast("檔案過大!", "error");
       return false;
     }
 
@@ -90,7 +91,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
     }
 
     if (files.length > 1) {
-      showToast("一次僅可上傳一個檔案。");
+      showToast("一次僅可上傳一個檔案。", "error");
       return;
     }
 
@@ -140,7 +141,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             downloadFilename: filename,
           }));
 
-          showToast("轉換完成!");
+          showToast("轉換完成!", "success");
         } else {
           let errorMessage = "轉換失敗";
           try {
@@ -160,7 +161,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             error: errorMessage,
           }));
 
-          showToast(errorMessage);
+          showToast(errorMessage, "error");
         }
       });
 
@@ -173,7 +174,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
           error: "網路錯誤",
         }));
 
-        showToast("網路錯誤");
+        showToast("網路錯誤", "error");
       });
 
       xhr.addEventListener("abort", () => {
@@ -203,7 +204,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
         error: "上傳失敗",
       }));
 
-      showToast("上傳失敗");
+      showToast("上傳失敗", "error");
     }
   };
 
@@ -227,13 +228,19 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter((prev) => prev + 1);
+    dragCounterRef.current += 1;
+    if (dragCounterRef.current === 1) {
+      setIsDragging(true);
+    }
   };
 
   const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter((prev) => prev - 1);
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
   };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
@@ -244,36 +251,51 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter(0);
+    dragCounterRef.current = 0;
+    setIsDragging(false);
 
     const files = e.dataTransfer.files;
     if (files.length === 0) return;
 
     if (files.length > 1) {
-      showToast("一次僅可上傳一個檔案。");
+      showToast("一次僅可上傳一個檔案。", "error");
       return;
     }
 
     updateFile(files[0]);
   };
 
+  const canInteract = state.mode === "selecting" || state.mode === "selected";
+
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {/* Drop zone */}
       <div
-        className={`border-2 border-dashed rounded-lg p-8 transition-all ${
-          dragCounter > 0
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-            : "border-gray-300 dark:border-gray-600"
-        } ${state.mode === "selecting" ? "" : "opacity-50"}`}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        className={`card rounded-xl p-8 transition-all duration-300 ${
+          canInteract ? "cursor-pointer" : ""
+        } ${isDragging ? "scale-[1.02]" : ""}`}
+        style={{
+          border: isDragging
+            ? '2px dashed var(--primary)'
+            : '2px dashed var(--border)',
+          backgroundColor: isDragging
+            ? 'rgba(59, 130, 246, 0.05)'
+            : 'var(--surface)',
+        }}
+        onDragEnter={canInteract ? handleDragEnter : undefined}
+        onDragLeave={canInteract ? handleDragLeave : undefined}
+        onDragOver={canInteract ? handleDragOver : undefined}
+        onDrop={canInteract ? handleDrop : undefined}
+        onClick={() => canInteract && fileInputRef.current?.click()}
       >
         <div className="text-center">
-          <div className="mb-4">
+          {/* Upload icon */}
+          <div
+            className={`mb-4 transition-transform duration-300 ${isDragging ? "scale-110" : ""}`}
+          >
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-14 w-14 transition-colors"
+              style={{ color: isDragging ? 'var(--primary)' : 'var(--text-secondary)' }}
               stroke="currentColor"
               fill="none"
               viewBox="0 0 48 48"
@@ -287,18 +309,30 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
               />
             </svg>
           </div>
+
+          {/* Instructions */}
           <div className="mb-2">
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer text-blue-600 hover:text-blue-500 dark:text-blue-400"
+            <span
+              className="font-medium transition-colors"
+              style={{ color: 'var(--primary)' }}
             >
               點擊選擇檔案
-            </label>
-            <span className="text-gray-600 dark:text-gray-400"> 或拖曳檔案至此</span>
+            </span>
+            <span
+              className="transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {" "}或拖曳檔案至此
+            </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p
+            className="text-sm transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             僅接受 EPUB 格式，最大 {humanFileSize(maxUploadBytes)}
           </p>
+
+          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             id="file-upload"
@@ -307,24 +341,48 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             className="sr-only"
             accept=".epub"
             onChange={handleFileChange}
-            disabled={state.mode !== "selecting" && state.mode !== "selected"}
+            disabled={!canInteract}
           />
         </div>
       </div>
 
+      {/* File info and actions */}
       {state.file && (
-        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {state.file.name}
-            </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+        <div
+          className="mt-4 p-5 rounded-xl transition-all duration-300 scale-in"
+          style={{
+            backgroundColor: 'var(--surface)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          {/* File name and size */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="text-2xl"
+                role="img"
+                aria-label="EPUB file"
+              >
+                📚
+              </span>
+              <span
+                className="font-medium truncate max-w-[200px] sm:max-w-[300px]"
+                style={{ color: 'var(--text)' }}
+              >
+                {state.file.name}
+              </span>
+            </div>
+            <span
+              className="text-sm whitespace-nowrap"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               {humanFileSize(state.file.size)}
             </span>
           </div>
 
+          {/* Progress bar */}
           {(state.mode === "uploading" || state.mode === "uploadend") && (
-            <div className="mb-2">
+            <div className="mb-4">
               <ProgressBar
                 progress={state.progress}
                 isProcessing={state.isProcessing}
@@ -333,18 +391,20 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             </div>
           )}
 
-          <div className="flex gap-2 mt-3">
+          {/* Action buttons */}
+          <div className="flex gap-3">
             {state.mode === "selected" && (
               <>
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn btn-primary flex-1"
                 >
-                  開始轉換
+                  <span>🔄</span>
+                  <span>開始轉換</span>
                 </button>
                 <button
                   onClick={reset}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                  className="btn btn-secondary"
                 >
                   取消
                 </button>
@@ -354,9 +414,14 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             {state.mode === "uploading" && (
               <button
                 onClick={handleCancel}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="btn flex-1"
+                style={{
+                  backgroundColor: 'var(--error)',
+                  color: 'white',
+                }}
               >
-                取消上傳
+                <span>✕</span>
+                <span>取消上傳</span>
               </button>
             )}
 
@@ -364,13 +429,14 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
               <>
                 <button
                   onClick={handleDownload}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="btn btn-success flex-1"
                 >
-                  下載轉換後的檔案
+                  <span>⬇️</span>
+                  <span>下載轉換後的檔案</span>
                 </button>
                 <button
                   onClick={reset}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                  className="btn btn-secondary"
                 >
                   重新開始
                 </button>
@@ -380,9 +446,10 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             {state.mode === "uploadend" && state.error && (
               <button
                 onClick={reset}
-                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                className="btn btn-secondary flex-1"
               >
-                重新開始
+                <span>↻</span>
+                <span>重新開始</span>
               </button>
             )}
           </div>

@@ -7,25 +7,48 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors">
-      <ThemeToggle />
+    <main
+      className="min-h-screen flex items-center justify-center p-4 relative transition-colors duration-300"
+      style={{
+        background: 'linear-gradient(135deg, var(--background) 0%, var(--surface) 100%)',
+      }}
+    >
+      {/* Theme toggle in top-right corner */}
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+      {/* Main content container */}
+      <div className="w-full max-w-2xl fade-in">
+        {/* Header */}
+        <header className="text-center mb-12">
+          <h1
+            className="text-5xl font-bold mb-4 transition-colors"
+            style={{ color: 'var(--text)' }}
+          >
             EPUB 簡繁轉換
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p
+            className="text-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             將簡體中文 EPUB 電子書轉換為繁體中文
           </p>
+        </header>
+
+        {/* Upload form */}
+        <div className="mb-8">
+          <UploadForm maxUploadBytes={env.MAX_UPLOAD_BYTES} />
         </div>
 
-        <UploadForm maxUploadBytes={env.MAX_UPLOAD_BYTES} />
-
-        <div className="mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
+        {/* Footer info */}
+        <footer
+          className="text-center text-sm space-y-2 transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           <p>支援的格式：EPUB</p>
-          <p className="mt-2">轉換過程完全在伺服器端進行，確保您的隱私安全</p>
-        </div>
+          <p>轉換過程完全在伺服器端進行，確保您的隱私安全</p>
+        </footer>
       </div>
     </main>
   );

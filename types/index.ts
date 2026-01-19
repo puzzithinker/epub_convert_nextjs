@@ -10,7 +10,10 @@ export interface UploadState {
   downloadFilename: string | null;
 }
 
+export type ToastType = "info" | "success" | "error";
+
 export interface ToastMessage {
   content: string;
   id: number;
+  type?: ToastType;
 }
