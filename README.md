@@ -9,15 +9,15 @@ A Next.js 14 application for converting Simplified Chinese EPUB files to Traditi
 - 📤 Drag-and-drop file upload
 - 📊 Real-time conversion progress tracking
 - 🌐 Traditional Chinese UI
-- ⚡ Fast conversion using native OpenCC
+- ⚡ Fast conversion using OpenCC (WASM)
 - 🔒 Server-side processing for privacy
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router, Turbopack)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4.x
-- **Conversion**: OpenCC (native) with yauzl/yazl for streaming
+- **Conversion**: OpenCC-JS (WASM) with yauzl/yazl for streaming
 - **Testing**: Vitest, Playwright
 - **Deployment**: Vercel-ready
 
@@ -51,7 +51,6 @@ Create a `.env.local` file:
 ```env
 MAX_UPLOAD_BYTES=20971520  # 20 MiB
 LOG_LEVEL=info
-USE_OPENCC_WASM=false
 ```
 
 ## Testing
@@ -111,8 +110,6 @@ Convert an EPUB file from Simplified to Traditional Chinese.
 2. Import project in Vercel
 3. Set environment variables
 4. Deploy
-
-**Note**: Use webpack build (`--webpack` flag) if Turbopack has issues with native modules.
 
 ## License
 

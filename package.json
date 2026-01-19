@@ -6,9 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
-    "dev:webpack": "TURBOPACK=0 next dev",
-    "build": "TURBOPACK=0 next build",
-    "build:turbo": "next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",

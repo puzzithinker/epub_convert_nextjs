@@ -15,8 +15,8 @@ describe("OpenCC Converter", () => {
 
       // The result should be different from the input (converted)
       expect(result).not.toBe(simplified);
-      // Should contain traditional Chinese characters
-      expect(result).toContain("繁");
+      // Should contain traditional Chinese characters (簡 is the traditional form of 简)
+      expect(result).toBe("簡體中文測試");
     });
 
     it("should preserve line endings", () => {
