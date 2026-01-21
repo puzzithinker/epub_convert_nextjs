@@ -4,6 +4,7 @@ import { useState, useRef, DragEvent, ChangeEvent } from "react";
 import { UploadState, ToastMessage, ToastType } from "@/types";
 import { ProgressBar } from "./ProgressBar";
 import { Toast } from "./Toast";
+import { SuccessConfetti } from "./SuccessConfetti";
 import { humanFileSize, getFilenameFromContentDisposition } from "@/lib/utils";
 
 interface UploadFormProps {
@@ -23,6 +24,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
 
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const dragCounterRef = useRef(0);
@@ -142,6 +144,10 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
           }));
 
           showToast("轉換完成!", "success");
+          setShowConfetti(true);
+
+          // Hide confetti after 3 seconds
+          setTimeout(() => setShowConfetti(false), 3000);
         } else {
           let errorMessage = "轉換失敗";
           try {
@@ -271,16 +277,13 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
     <div className="w-full max-w-2xl mx-auto">
       {/* Drop zone */}
       <div
-        className={`card rounded-xl p-8 transition-all duration-300 ${
-          canInteract ? "cursor-pointer" : ""
-        } ${isDragging ? "scale-[1.02]" : ""}`}
+        className={`glass-card rounded-2xl p-8 transition-all duration-300 ${
+          canInteract ? "cursor-pointer hover:scale-[1.01]" : ""
+        } ${isDragging ? "scale-[1.02] glow-primary" : ""}`}
         style={{
           border: isDragging
-            ? '2px dashed var(--primary)'
-            : '2px dashed var(--border)',
-          backgroundColor: isDragging
-            ? 'rgba(59, 130, 246, 0.05)'
-            : 'var(--surface)',
+            ? '2px solid var(--primary)'
+            : '2px solid var(--glass-border)',
         }}
         onDragEnter={canInteract ? handleDragEnter : undefined}
         onDragLeave={canInteract ? handleDragLeave : undefined}
@@ -294,7 +297,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             className={`mb-4 transition-transform duration-300 ${isDragging ? "scale-110" : ""}`}
           >
             <svg
-              className="mx-auto h-14 w-14 transition-colors"
+              className="mx-auto h-8 w-8 transition-colors"
               style={{ color: isDragging ? 'var(--primary)' : 'var(--text-secondary)' }}
               stroke="currentColor"
               fill="none"
@@ -349,17 +352,13 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
       {/* File info and actions */}
       {state.file && (
         <div
-          className="mt-4 p-5 rounded-xl transition-all duration-300 scale-in"
-          style={{
-            backgroundColor: 'var(--surface)',
-            boxShadow: 'var(--shadow-md)',
-          }}
+          className="mt-4 p-5 rounded-2xl glass-surface transition-all duration-300 scale-in-spring"
         >
           {/* File name and size */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <span
-                className="text-2xl"
+                className="text-xl"
                 role="img"
                 aria-label="EPUB file"
               >
@@ -397,14 +396,14 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
               <>
                 <button
                   onClick={handleSubmit}
-                  className="btn btn-primary flex-1"
+                  className="btn btn-primary flex-1 hover:glow-primary"
                 >
                   <span>🔄</span>
                   <span>開始轉換</span>
                 </button>
                 <button
                   onClick={reset}
-                  className="btn btn-secondary"
+                  className="btn btn-secondary hover:scale-105"
                 >
                   取消
                 </button>
@@ -414,7 +413,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             {state.mode === "uploading" && (
               <button
                 onClick={handleCancel}
-                className="btn flex-1"
+                className="btn flex-1 hover:glow-error"
                 style={{
                   backgroundColor: 'var(--error)',
                   color: 'white',
@@ -429,14 +428,14 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
               <>
                 <button
                   onClick={handleDownload}
-                  className="btn btn-success flex-1"
+                  className="btn btn-success flex-1 hover:glow-success"
                 >
                   <span>⬇️</span>
                   <span>下載轉換後的檔案</span>
                 </button>
                 <button
                   onClick={reset}
-                  className="btn btn-secondary"
+                  className="btn btn-secondary hover:scale-105"
                 >
                   重新開始
                 </button>
@@ -446,7 +445,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
             {state.mode === "uploadend" && state.error && (
               <button
                 onClick={reset}
-                className="btn btn-secondary flex-1"
+                className="btn btn-secondary flex-1 hover:scale-105"
               >
                 <span>↻</span>
                 <span>重新開始</span>
@@ -456,6 +455,7 @@ export function UploadForm({ maxUploadBytes }: UploadFormProps) {
         </div>
       )}
 
+      {showConfetti && <SuccessConfetti />}
       <Toast message={toast} onComplete={() => setToast(null)} />
     </div>
   );

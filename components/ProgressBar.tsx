@@ -14,6 +14,7 @@ export function ProgressBar({ progress, isProcessing, hasError }: ProgressBarPro
         className="w-full h-3 rounded-full overflow-hidden relative"
         style={{
           backgroundColor: 'var(--border)',
+          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
         }}
       >
         {/* Animated shimmer effect during processing */}
@@ -29,17 +30,22 @@ export function ProgressBar({ progress, isProcessing, hasError }: ProgressBarPro
 
         {/* Actual progress bar */}
         <div
-          className="h-full transition-all duration-300 relative"
+          className={`h-full transition-all duration-300 relative ${isProcessing ? 'pulse-glow' : ''}`}
           style={{
             width: `${progress}%`,
-            backgroundColor: hasError ? 'var(--error)' : 'var(--primary)',
+            background: hasError
+              ? 'var(--error)'
+              : 'linear-gradient(90deg, var(--primary), var(--gradient-4))',
+            boxShadow: !hasError && progress > 0
+              ? '0 0 10px rgba(59, 130, 246, 0.5)'
+              : 'none',
           }}
         />
       </div>
 
       {/* Percentage display */}
       <div
-        className="text-sm text-center font-medium"
+        className="text-sm text-center font-medium fade-in"
         style={{ color: 'var(--text-secondary)' }}
       >
         {progress}%

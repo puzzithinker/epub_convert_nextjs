@@ -34,17 +34,22 @@ export function Toast({ message, onComplete }: ToastProps) {
         return {
           backgroundColor: 'var(--success)',
           color: 'white',
+          boxShadow: 'var(--shadow-lg), 0 0 20px rgba(16, 185, 129, 0.4)',
         };
       case "error":
         return {
           backgroundColor: 'var(--error)',
           color: 'white',
+          boxShadow: 'var(--shadow-lg), 0 0 20px rgba(239, 68, 68, 0.4)',
         };
       default:
         return {
-          backgroundColor: 'var(--surface)',
+          backgroundColor: 'var(--glass-bg)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           color: 'var(--text)',
-          border: '1px solid var(--border)',
+          border: '1px solid var(--glass-border)',
+          boxShadow: 'var(--shadow-lg)',
         };
     }
   };
@@ -62,12 +67,11 @@ export function Toast({ message, onComplete }: ToastProps) {
 
   return (
     <div
-      className={`fixed right-5 bottom-5 z-50 ml-5 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 flex items-center gap-3 ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+      className={`fixed right-5 bottom-5 z-50 ml-5 px-6 py-4 rounded-2xl transition-all duration-300 flex items-center gap-3 ${
+        isVisible ? "opacity-100 translate-y-0 bounce-in" : "opacity-0 translate-y-12"
       }`}
       style={{
         ...getTypeStyles(),
-        boxShadow: 'var(--shadow-lg)',
       }}
       role="alert"
       aria-live="polite"
@@ -78,7 +82,7 @@ export function Toast({ message, onComplete }: ToastProps) {
         e.currentTarget.style.animationPlayState = "running";
       }}
     >
-      <span className="text-lg font-bold" aria-hidden="true">
+      <span className={`text-lg font-bold ${type === 'success' ? 'scale-in-spring' : ''}`} aria-hidden="true">
         {getIcon()}
       </span>
       <span className="font-medium">{message.content}</span>
